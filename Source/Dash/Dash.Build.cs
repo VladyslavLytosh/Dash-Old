@@ -7,10 +7,30 @@ public class Dash : ModuleRules
 	public Dash(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+		
+		PublicIncludePaths.AddRange(
+			new string[] {
+				"Dash"
+			}
+		);
+		
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core", 
+			"CoreUObject", 
+			"Engine", 
+		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "GameplayTags", "GameplayAbilities" });
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{			
+			"InputCore",
+			"GameplayTags", 
+			"GameplayAbilities",
+			"EnhancedInput",	
+			"ModularGameplay"
+		});
+		
+
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
