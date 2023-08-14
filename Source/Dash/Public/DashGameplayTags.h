@@ -14,6 +14,9 @@ struct FDashGameplayTags
 	FGameplayTag InputTag_Move;
 	FGameplayTag InputTag_Look;
 	
+	FGameplayTag InputTag_Sprint;
+	FGameplayTag InputTag_Crouch;
+	
 protected:
 	void AddAllTags(UGameplayTagsManager& Manager);
 	void AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment);

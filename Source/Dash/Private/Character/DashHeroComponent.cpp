@@ -6,6 +6,8 @@
 #include "DashGameplayTags.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Character/DashCharacterMovementComponent.h"
+#include "Character/PlayerCharacter.h"
 #include "Input/DashInputComponent.h"
 
 void UDashHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputComponent)
@@ -29,37 +31,42 @@ void UDashHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 
 	Subsystem->ClearAllMappings();
 
-	if (InputConfig)
-	{
-		Subsystem->AddMappingContext(DefaultMappingContext,0);
-		
-		const FDashGameplayTags& GameplayTags = FDashGameplayTags::Get();
+	if (!InputConfig) return;
 
-		UDashInputComponent* DashIC = CastChecked<UDashInputComponent>(PlayerInputComponent);
+	Subsystem->AddMappingContext(DefaultMappingContext,0);
 		
-		DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move, /*bLogIfNotFound=*/ false);
-		DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Look, ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse, /*bLogIfNotFound=*/ false);
-	}
+	const FDashGameplayTags& GameplayTags = FDashGameplayTags::Get();
+
+	UDashInputComponent* DashIC = CastChecked<UDashInputComponent>(PlayerInputComponent);
+		
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move, false);
+		
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Look, ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse,false);
+		
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Sprint, ETriggerEvent::Triggered, this, &ThisClass::Input_Spint_Pressed,false);
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Sprint, ETriggerEvent::Completed, this, &ThisClass::Input_Sprint_Released,false);
+	
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Crouch, ETriggerEvent::Triggered, this, &ThisClass::Input_Crouch_Pressed,false);
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Crouch, ETriggerEvent::Completed, this, &ThisClass::Input_Crouch_Released,false);
 }
 
 void UDashHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 {
 	APawn* Pawn = GetPawn<APawn>();
-	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
+	const auto Controller = Pawn ? Pawn->GetController() : nullptr;
 
-	if (Controller)
+	if (!Controller) return;
+
+	const FVector2D Value = InputActionValue.Get<FVector2D>();
+
+	if (Value.X != 0.0f)
 	{
-		const FVector2D Value = InputActionValue.Get<FVector2D>();
+		Pawn->AddMovementInput(Pawn->GetActorRightVector(), Value.X);
+	}
 
-		if (Value.X != 0.0f)
-		{
-			Pawn->AddMovementInput(Pawn->GetActorRightVector(), Value.X);
-		}
-
-		if (Value.Y != 0.0f)
-		{
-			Pawn->AddMovementInput(Pawn->GetActorForwardVector(), Value.Y);
-		}
+	if (Value.Y != 0.0f)
+	{
+		Pawn->AddMovementInput(Pawn->GetActorForwardVector(), Value.Y);
 	}
 }
 
@@ -67,10 +74,7 @@ void UDashHeroComponent::Input_LookMouse(const FInputActionValue& InputActionVal
 {
 	APawn* Pawn = GetPawn<APawn>();
 
-	if (!Pawn)
-	{
-		return;
-	}
+	if (!Pawn) return;
 	
 	const FVector2D Value = InputActionValue.Get<FVector2D>();
 
@@ -83,4 +87,44 @@ void UDashHeroComponent::Input_LookMouse(const FInputActionValue& InputActionVal
 	{
 		Pawn->AddControllerPitchInput(Value.Y);
 	}
+}
+
+void UDashHeroComponent::Input_Spint_Pressed(const FInputActionValue& InputActionValue)
+{
+	const auto PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!PlayerCharacter) return;
+
+	auto CharacterMovementComponent = PlayerCharacter->GetCharacterMovement<UDashCharacterMovementComponent>();
+	
+	CharacterMovementComponent->SprintPressed();
+}
+
+void UDashHeroComponent::Input_Sprint_Released(const FInputActionValue& InputActionValue)
+{
+	const auto PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!PlayerCharacter) return;
+
+	auto CharacterMovementComponent = PlayerCharacter->GetCharacterMovement<UDashCharacterMovementComponent>();
+
+	CharacterMovementComponent->SprintReleased();
+}
+
+void UDashHeroComponent::Input_Crouch_Pressed(const FInputActionValue& InputActionValue)
+{
+	const auto PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!PlayerCharacter) return;
+	
+	PlayerCharacter->Crouch();
+}
+
+void UDashHeroComponent::Input_Crouch_Released(const FInputActionValue& InputActionValue)
+{
+	const auto PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!PlayerCharacter) return;
+	
+	PlayerCharacter->UnCrouch();
 }

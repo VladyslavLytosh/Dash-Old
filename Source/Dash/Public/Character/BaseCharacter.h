@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class UDashCharacterMovementComponent;
+
 UCLASS(Abstract)
 class DASH_API ABaseCharacter : public ACharacter
 {

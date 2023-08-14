@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+class UDashCharacterMovementComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UDashInputComponent;
@@ -17,10 +18,14 @@ class DASH_API APlayerCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	APlayerCharacter();
+	APlayerCharacter(const FObjectInitializer& ObjectInitializer);
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Movement)
+	UDashCharacterMovementComponent* DashCharacterMovementComponent;
+	
 private:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = true))
 	UDashHeroComponent* HeroComponent;

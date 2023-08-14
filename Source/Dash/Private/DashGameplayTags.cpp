@@ -21,6 +21,8 @@ void FDashGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 {
 	AddTag(InputTag_Move, "InputTag.Move", "Move input.");
 	AddTag(InputTag_Look, "InputTag.Look", "Look (mouse) input.");
+	AddTag(InputTag_Sprint, "InputTag.Sprint", "Sprint input.");
+	AddTag(InputTag_Crouch, "InputTag.Crouch", "Crouch input.");
 }
 
 void FDashGameplayTags::AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment)
@@ -48,6 +50,5 @@ FGameplayTag FDashGameplayTags::FindTagByString(FString TagString, bool bMatchPa
 			}
 		}
 	}
-
 	return Tag;
 }

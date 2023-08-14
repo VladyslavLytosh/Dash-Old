@@ -23,11 +23,18 @@ protected:
 	void Input_Move(const FInputActionValue& InputActionValue);
 	void Input_LookMouse(const FInputActionValue& InputActionValue);
 
+	void Input_Spint_Pressed(const FInputActionValue& InputActionValue);
+	void Input_Sprint_Released(const FInputActionValue& InputActionValue);
+
+	void Input_Crouch_Pressed(const FInputActionValue& InputActionValue);
+	void Input_Crouch_Released(const FInputActionValue& InputActionValue);
+
 private:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,meta = (AllowPrivateAccess = true))
 	UInputConfig* InputConfig;
 
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,meta = (AllowPrivateAccess = true))
 	UInputMappingContext* DefaultMappingContext;
+
 	
 };

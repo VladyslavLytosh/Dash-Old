@@ -4,12 +4,16 @@
 #include "Character/PlayerCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Character/DashCharacterMovementComponent.h"
 #include "Character/DashHeroComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
-APlayerCharacter::APlayerCharacter()
+APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
+: Super(ObjectInitializer.SetDefaultSubobjectClass<UDashCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
+	DashCharacterMovementComponent = Cast<UDashCharacterMovementComponent>(GetCharacterMovement());
+	
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	

@@ -3,4 +3,6 @@
 
 #include "Character/BaseCharacter.h"
 
+#include "Character/DashCharacterMovementComponent.h"
+
 
