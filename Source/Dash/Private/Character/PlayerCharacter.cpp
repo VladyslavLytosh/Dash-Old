@@ -17,7 +17,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	CameraComponent->SetupAttachment(GetMesh());
+	CameraComponent->SetupAttachment(GetMesh(),"Head");
 	CameraComponent->bUsePawnControlRotation = true;
 
 	HeroComponent = CreateDefaultSubobject<UDashHeroComponent>(TEXT("HeroComponent"));

@@ -156,6 +156,11 @@ bool UDashCharacterMovementComponent::IsMovementMode(EMovementMode InMovementMod
 	return InMovementMode == MovementMode;
 }
 
+bool UDashCharacterMovementComponent::IsSliding()
+{
+	return IsCustomMovementMode(CMOVE_Slide);
+}
+
 void UDashCharacterMovementComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
@@ -170,11 +175,7 @@ void UDashCharacterMovementComponent::OnMovementModeChanged(EMovementMode Previo
 	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Slide) ExitSlide();
 	
 	if (IsCustomMovementMode(CMOVE_Slide)) EnterSlide();
-
-	if (IsFalling())
-	{
-		bOrientRotationToMovement = true;
-	}
+	
 }
 
 bool UDashCharacterMovementComponent::IsMovingOnGround() const
@@ -223,7 +224,6 @@ void UDashCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iteratio
 void UDashCharacterMovementComponent::EnterSlide()
 {
 	bWantsToCrouch = true;
-	bOrientRotationToMovement = false;
 	CharacterOwner->bUseControllerRotationYaw = false;
 	Velocity += Velocity.GetSafeNormal2D() * SlideEnterImpulse;
 	
@@ -234,7 +234,6 @@ void UDashCharacterMovementComponent::ExitSlide()
 {
 	bWantsToCrouch = false;
 	CharacterOwner->bUseControllerRotationYaw = true;
-	bOrientRotationToMovement = true;
 }
 
 bool UDashCharacterMovementComponent::CanSlide()

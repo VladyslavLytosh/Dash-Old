@@ -83,7 +83,7 @@ public:
 	
 	virtual float GetMaxBrakingDeceleration() const override;
 	virtual float GetMaxSpeed() const override;
-	
+
 	bool IsCustomMovementMode(ECustomMovementMode InCustomMovementMode) const
 	{
 		return MovementMode == MOVE_Custom && CustomMovementMode == InCustomMovementMode;
@@ -98,6 +98,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool IsMovementMode(EMovementMode InMovementMode) const;
 
+	UFUNCTION(BlueprintPure)
+	bool IsSliding();
+	
 protected:
 	virtual void InitializeComponent() override;
 	
