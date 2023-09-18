@@ -175,7 +175,6 @@ void UDashCharacterMovementComponent::OnMovementModeChanged(EMovementMode Previo
 	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Slide) ExitSlide();
 	
 	if (IsCustomMovementMode(CMOVE_Slide)) EnterSlide();
-	
 }
 
 bool UDashCharacterMovementComponent::IsMovingOnGround() const

@@ -128,6 +128,8 @@ void UDashHeroComponent::Input_Jump_Pressed(const FInputActionValue& InputAction
 
 	if (!PlayerCharacter) return;
 
+	if(PlayerCharacter->bIsCrouched) PlayerCharacter->UnCrouch();
+	
 	PlayerCharacter->Jump();
 }
 
