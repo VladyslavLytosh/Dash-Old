@@ -43,11 +43,13 @@ void UDashHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 		
 	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Look, ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse,false);
 		
-	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Sprint, ETriggerEvent::Triggered, this, &ThisClass::Input_Spint_Pressed,false);
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Sprint, ETriggerEvent::Started, this, &ThisClass::Input_Spint_Pressed,false);
 	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Sprint, ETriggerEvent::Completed, this, &ThisClass::Input_Sprint_Released,false);
 	
-	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Crouch, ETriggerEvent::Triggered, this, &ThisClass::Input_Crouch_Pressed,false);
-	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Crouch, ETriggerEvent::Completed, this, &ThisClass::Input_Crouch_Released,false);
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Crouch, ETriggerEvent::Started, this, &ThisClass::Input_Crouch_Pressed,false);
+	
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Jump, ETriggerEvent::Triggered, this, &ThisClass::Input_Jump_Pressed,false);
+	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Jump, ETriggerEvent::Completed, this, &ThisClass::Input_Jump_Released,false);
 }
 
 void UDashHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
@@ -95,7 +97,7 @@ void UDashHeroComponent::Input_Spint_Pressed(const FInputActionValue& InputActio
 
 	if (!PlayerCharacter) return;
 
-	auto CharacterMovementComponent = PlayerCharacter->GetCharacterMovement<UDashCharacterMovementComponent>();
+	const auto CharacterMovementComponent = PlayerCharacter->GetCharacterMovement<UDashCharacterMovementComponent>();
 	
 	CharacterMovementComponent->SprintPressed();
 }
@@ -106,7 +108,7 @@ void UDashHeroComponent::Input_Sprint_Released(const FInputActionValue& InputAct
 
 	if (!PlayerCharacter) return;
 
-	auto CharacterMovementComponent = PlayerCharacter->GetCharacterMovement<UDashCharacterMovementComponent>();
+	const auto CharacterMovementComponent = PlayerCharacter->GetCharacterMovement<UDashCharacterMovementComponent>();
 
 	CharacterMovementComponent->SprintReleased();
 }
@@ -116,15 +118,24 @@ void UDashHeroComponent::Input_Crouch_Pressed(const FInputActionValue& InputActi
 	const auto PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 
 	if (!PlayerCharacter) return;
-	
-	PlayerCharacter->Crouch();
+
+	PlayerCharacter->bIsCrouched ? PlayerCharacter->UnCrouch() : PlayerCharacter->Crouch();
 }
 
-void UDashHeroComponent::Input_Crouch_Released(const FInputActionValue& InputActionValue)
+void UDashHeroComponent::Input_Jump_Pressed(const FInputActionValue& InputActionValue)
 {
 	const auto PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 
 	if (!PlayerCharacter) return;
-	
-	PlayerCharacter->UnCrouch();
+
+	PlayerCharacter->Jump();
+}
+
+void UDashHeroComponent::Input_Jump_Released(const FInputActionValue& InputActionValue)
+{
+	const auto PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!PlayerCharacter) return;
+
+	PlayerCharacter->StopJumping();
 }

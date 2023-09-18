@@ -16,6 +16,7 @@ struct FDashGameplayTags
 	
 	FGameplayTag InputTag_Sprint;
 	FGameplayTag InputTag_Crouch;
+	FGameplayTag InputTag_Jump;
 	
 protected:
 	void AddAllTags(UGameplayTagsManager& Manager);

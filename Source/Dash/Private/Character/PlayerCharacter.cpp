@@ -7,7 +7,6 @@
 #include "Character/DashCharacterMovementComponent.h"
 #include "Character/DashHeroComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer.SetDefaultSubobjectClass<UDashCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -17,18 +16,13 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	
-	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SprintArmComponent"));
-	SpringArmComponent->SetupAttachment(GetMesh());
-	SpringArmComponent->TargetArmLength = 0.f;
-	SpringArmComponent->bUsePawnControlRotation = true;
-
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	CameraComponent->bUsePawnControlRotation = false;
-	CameraComponent->SetupAttachment(SpringArmComponent);
+	CameraComponent->SetupAttachment(GetMesh());
+	CameraComponent->bUsePawnControlRotation = true;
 
 	HeroComponent = CreateDefaultSubobject<UDashHeroComponent>(TEXT("HeroComponent"));
 	
-	GetCharacterMovement()->bOrientRotationToMovement = false;
+	DashCharacterMovementComponent->bOrientRotationToMovement = false;
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

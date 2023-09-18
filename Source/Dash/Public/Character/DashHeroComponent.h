@@ -27,7 +27,9 @@ protected:
 	void Input_Sprint_Released(const FInputActionValue& InputActionValue);
 
 	void Input_Crouch_Pressed(const FInputActionValue& InputActionValue);
-	void Input_Crouch_Released(const FInputActionValue& InputActionValue);
+	
+	void Input_Jump_Pressed(const FInputActionValue& InputActionValue);
+	void Input_Jump_Released(const FInputActionValue& InputActionValue);
 
 private:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,meta = (AllowPrivateAccess = true))

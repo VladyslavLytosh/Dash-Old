@@ -20,7 +20,7 @@ class DASH_API APlayerCharacter : public ACharacter
 public:
 	APlayerCharacter(const FObjectInitializer& ObjectInitializer);
 	
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Movement)
