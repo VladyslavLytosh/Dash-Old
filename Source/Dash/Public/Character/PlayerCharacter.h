@@ -22,6 +22,7 @@ public:
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	
+	FCollisionQueryParams GetIgnoreCharacterParams() const;
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Movement)
 	UDashCharacterMovementComponent* DashCharacterMovementComponent;

@@ -27,12 +27,13 @@ struct FDashCharacterGroundInfo
 	float GroundDistance;
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum ECustomMovementMode
 {
-	CMOVE_None	UMETA(Hidden),
-	CMOVE_Slide UMETA(DisplayName = "Slide"),
-	CMOVE_MAX	UMETA(Hidden),
+	CMOVE_None		UMETA(Hidden),
+	CMOVE_Slide		UMETA(DisplayName = "Slide"),
+	CMOVE_WallRun	UMETA(DisplayName = "Wall Run"),
+	CMOVE_MAX		UMETA(Hidden),
 };
 
 UCLASS()
@@ -46,6 +47,7 @@ class DASH_API UDashCharacterMovementComponent : public UCharacterMovementCompon
 		typedef FSavedMove_Character Super;
 
 		uint8 Saved_bWantsToSprint:1;
+		uint8 Saved_bWallRunIsRight:1;
 		
 	
 		FSavedMove_Dash();
@@ -68,6 +70,7 @@ class DASH_API UDashCharacterMovementComponent : public UCharacterMovementCompon
 	};
 	
 	bool Safe_bWantsToSprint;
+	bool Safe_bWallRunIsRight;
 	
 public:
 	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
@@ -101,6 +104,14 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool IsSliding();
 	
+	UFUNCTION(BlueprintPure)
+	bool IsWallRunning() const { return IsCustomMovementMode(CMOVE_WallRun); }
+	UFUNCTION(BlueprintPure)
+	bool WallRunningIsRight() const { return Safe_bWallRunIsRight; }
+	
+	virtual bool CanAttemptJump() const override;
+	virtual bool DoJump(bool bReplayingMoves) override;
+	
 protected:
 	virtual void InitializeComponent() override;
 	
@@ -128,16 +139,44 @@ private:
 	float SlideFrictionFactor=.06f;
 	UPROPERTY(EditDefaultsOnly)
 	float BrakingDecelerationSliding=1000.f;
+
+	// Wall Run
+	UPROPERTY(EditDefaultsOnly)
+	float MinWallRunSpeed=200.f;
+	UPROPERTY(EditDefaultsOnly)
+	float MaxWallRunSpeed=800.f;
+	UPROPERTY(EditDefaultsOnly)
+	float MaxVerticalWallRunSpeed=200.f;
+	UPROPERTY(EditDefaultsOnly)
+	float WallRunPullAwayAngle=75;
+	UPROPERTY(EditDefaultsOnly)
+	float WallAttractionForce = 200.f;
+	UPROPERTY(EditDefaultsOnly)
+	float MinWallRunHeight=50.f;
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* WallRunGravityScaleCurve;
+	UPROPERTY(EditDefaultsOnly)
+	float WallJumpOffForce = 300.f;
 	
 	UPROPERTY(Transient)
 	APlayerCharacter* DashCharacterOwner;
 
+	// Slide
 	void EnterSlide();
 	void ExitSlide();
 	bool CanSlide();
 	void PhysSlide(float DeltaTime, int32 Iterations);
-	
+
+	// Sprint
 	bool CanSprint() const;
 
+
+	// Wall Run
+	bool TryWallRun();
+	void PhysWallRun(float deltaTime, int32 Iterations);
+
 	FDashCharacterGroundInfo CachedGroundInfo;
+
+	float CapR() const;
+	float CapHH() const;
 };
