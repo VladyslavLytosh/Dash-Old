@@ -6,6 +6,7 @@
 #include "DashGameplayTags.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "Character/DashCharacterMovementComponent.h"
 #include "Character/PlayerCharacter.h"
 #include "Input/DashInputComponent.h"
@@ -50,6 +51,8 @@ void UDashHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 	
 	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Jump, ETriggerEvent::Triggered, this, &ThisClass::Input_Jump_Pressed,false);
 	DashIC->BindNativeAction(InputConfig, GameplayTags.InputTag_Jump, ETriggerEvent::Completed, this, &ThisClass::Input_Jump_Released,false);
+	
+	DashIC->BindAbilityActions(InputConfig,this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased);
 }
 
 void UDashHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
@@ -140,4 +143,28 @@ void UDashHeroComponent::Input_Jump_Released(const FInputActionValue& InputActio
 	if (!PlayerCharacter) return;
 
 	PlayerCharacter->StopJumping();
+}
+
+void UDashHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
+{
+	const APlayerCharacter* Character = GetPawn<APlayerCharacter>();
+	if (Character)
+	{
+		if (UPlayerAbilitySystemComponent* AbilitySystemComponent = Cast<UPlayerAbilitySystemComponent>(Character->GetAbilitySystemComponent()))
+		{
+			AbilitySystemComponent->AbilityInputTagPressed(InputTag);
+		}
+	}
+}
+
+void UDashHeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
+{
+	const APlayerCharacter* Character = GetPawn<APlayerCharacter>();
+	if (Character)
+	{
+		if (UPlayerAbilitySystemComponent* AbilitySystemComponent = Cast<UPlayerAbilitySystemComponent>(Character->GetAbilitySystemComponent()))
+		{
+			AbilitySystemComponent->AbilityInputTagReleased(InputTag);
+		}
+	}
 }

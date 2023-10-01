@@ -24,6 +24,7 @@ void FDashGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 	AddTag(InputTag_Sprint, "InputTag.Sprint", "Sprint input.");
 	AddTag(InputTag_Crouch, "InputTag.Crouch", "Crouch input.");
 	AddTag(InputTag_Jump, "InputTag.Jump", "Jump input.");
+	AddTag(InputTag_Grapple, "InputTag.Grapple", "Grapple input.");
 }
 
 void FDashGameplayTags::AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment)

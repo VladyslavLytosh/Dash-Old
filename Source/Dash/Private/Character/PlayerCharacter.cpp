@@ -3,6 +3,9 @@
 
 #include "Character/PlayerCharacter.h"
 
+#include "AbilitySystemComponent.h"
+#include "AbilitySystem/DashAbilitySet.h"
+#include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Character/DashCharacterMovementComponent.h"
 #include "Character/DashHeroComponent.h"
@@ -23,6 +26,25 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	HeroComponent = CreateDefaultSubobject<UDashHeroComponent>(TEXT("HeroComponent"));
 	
 	DashCharacterMovementComponent->bOrientRotationToMovement = false;
+
+	AbilitySystemComponent = CreateDefaultSubobject<UPlayerAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	bReplicates = true;
+}
+
+void APlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (!AbilitySystemComponent) return;
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	if (HasAuthority())
+	{
+		TryApplyAbilitySet(DefaultAbilitySet);
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -44,5 +66,23 @@ FCollisionQueryParams APlayerCharacter::GetIgnoreCharacterParams() const
 	Params.AddIgnoredActor(this);
 
 	return Params;
+}
+
+void APlayerCharacter::TryApplyAbilitySet(const UDashAbilitySet* AbilitySet, bool bCancelEarlySet)
+{
+	if (bCancelEarlySet)
+	{
+		GrantedHandles.TakeFromAbilitySystem(AbilitySystemComponent);
+	}
+
+	if (AbilitySet)
+	{
+		AbilitySet->GiveToAbilitySystem(AbilitySystemComponent, &GrantedHandles);
+	}
+}
+
+UAbilitySystemComponent* APlayerCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 

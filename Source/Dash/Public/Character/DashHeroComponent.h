@@ -7,6 +7,7 @@
 #include "DashHeroComponent.generated.h"
 
 
+struct FGameplayTag;
 class UInputMappingContext;
 struct FInputActionValue;
 class UInputConfig;
@@ -30,13 +31,14 @@ protected:
 	
 	void Input_Jump_Pressed(const FInputActionValue& InputActionValue);
 	void Input_Jump_Released(const FInputActionValue& InputActionValue);
-
+	
+	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
+	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
 private:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,meta = (AllowPrivateAccess = true))
 	UInputConfig* InputConfig;
 
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,meta = (AllowPrivateAccess = true))
 	UInputMappingContext* DefaultMappingContext;
-
-	
 };
+

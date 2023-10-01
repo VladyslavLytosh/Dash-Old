@@ -25,6 +25,7 @@ public class Dash : ModuleRules
 		{			
 			"InputCore",
 			"GameplayTags", 
+			"GameplayTasks",
 			"GameplayAbilities",
 			"EnhancedInput",	
 			"ModularGameplay"
