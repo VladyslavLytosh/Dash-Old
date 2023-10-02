@@ -3,6 +3,7 @@
 
 #include "Character/DashCharacterMovementComponent.h"
 
+#include "Camera/CameraComponent.h"
 #include "Character/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
@@ -11,7 +12,7 @@
 float MacroDuration = 2.f;
 #define SLOG(x) GEngine->AddOnScreenDebugMessage(-1, MacroDuration ? MacroDuration : -1.f, FColor::Yellow, x);
 #define POINT(x, c) DrawDebugPoint(GetWorld(), x, 10, c, !MacroDuration, MacroDuration);
-#define LINE(x1, x2, c) DrawDebugLine(GetWorld(), x1, x2, c, !MacroDuration, MacroDuration);
+#define LINE(x1, x2, c, thickness) DrawDebugLine(GetWorld(), x1, x2, c, !MacroDuration, MacroDuration,0, thickness);
 #define CAPSULE(x, c) DrawDebugCapsule(GetWorld(), x, CapHH(), CapR(), FQuat::Identity, c, !MacroDuration, MacroDuration);
 #else
 #define SLOG(x)
@@ -185,12 +186,13 @@ bool UDashCharacterMovementComponent::IsSliding()
 
 bool UDashCharacterMovementComponent::CanAttemptJump() const
 {
-	return Super::CanAttemptJump() || IsWallRunning();
+	return Super::CanAttemptJump() || IsWallRunning() || IsGrappling();
 }
 
 bool UDashCharacterMovementComponent::DoJump(bool bReplayingMoves)
 {
-	bool bWasWallRunning = IsWallRunning();
+	bool bWasWallRunning = IsWallRunning(); // save this value because after super call player will be in falling
+	bool bWasGrappling = IsGrappling();
 	if (Super::DoJump(bReplayingMoves))
 	{
 		if (bWasWallRunning)
@@ -203,9 +205,18 @@ bool UDashCharacterMovementComponent::DoJump(bool bReplayingMoves)
 			GetWorld()->LineTraceSingleByProfile(WallHit, Start, End, "BlockAll", Params);
 			Velocity += WallHit.Normal * WallJumpOffForce;
 		}
+		if (bWasGrappling)
+		{
+			Velocity += (UpdatedComponent->GetForwardVector() * GrappleHorizontalBoost) + (FVector::UpVector * GrappleVerticalBoost);
+		}
 		return true;
 	}
 	return false;
+}
+
+bool UDashCharacterMovementComponent::IsGrappling() const
+{
+	return IsCustomMovementMode(CMOVE_Grapple);
 }
 
 void UDashCharacterMovementComponent::InitializeComponent()
@@ -220,6 +231,8 @@ void UDashCharacterMovementComponent::OnMovementModeChanged(EMovementMode Previo
 	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
 	
 	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Slide) ExitSlide();
+	
+	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Grapple) ExitGrapple();
 
 	if (IsWallRunning() && GetOwnerRole() == ROLE_SimulatedProxy)
 	{
@@ -229,8 +242,12 @@ void UDashCharacterMovementComponent::OnMovementModeChanged(EMovementMode Previo
 		FHitResult WallHit;
 		Safe_bWallRunIsRight = GetWorld()->LineTraceSingleByProfile(WallHit, Start, End, "BlockAll", Params);
 	}
-	
 	if (IsCustomMovementMode(CMOVE_Slide)) EnterSlide();
+	
+	if (IsCustomMovementMode(CMOVE_Grapple))
+	{
+		EnterGrapple();
+	}
 }
 
 bool UDashCharacterMovementComponent::IsMovingOnGround() const
@@ -277,6 +294,9 @@ void UDashCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iteratio
 		break;
 	case CMOVE_WallRun:
 		PhysWallRun(DeltaTime,Iterations);
+		break;
+	case CMOVE_Grapple:
+		PhysGrapple(DeltaTime,Iterations);
 		break;
 	default:
 		UE_LOG(LogTemp,Fatal,TEXT("Invalid Movement Mode"))
@@ -649,6 +669,84 @@ void UDashCharacterMovementComponent::PhysWallRun(float deltaTime, int32 Iterati
 	}
 }
 
+bool UDashCharacterMovementComponent::TryGrapple()
+{
+	const FVector Start = DashCharacterOwner->GetCameraComponent()->GetComponentLocation();
+	const FVector End = Start + DashCharacterOwner->GetCameraComponent()->GetForwardVector() * MaxGrappleDistance;
+	LINE(Start,End,FColor::Red,5)
+	
+	FHitResult HitResult;
+	if (!GetWorld()->LineTraceSingleByProfile(HitResult, Start, End,"BlockAll", DashCharacterOwner->GetIgnoreCharacterParams()))
+	{
+		return false;
+	}
+	AttachPoint = HitResult;
+	SetMovementMode(MOVE_Custom,CMOVE_Grapple);
+	return true;
+}
+
+void UDashCharacterMovementComponent::PhysGrapple(float deltaTime, int32 Iterations)
+{
+	if(deltaTime < MIN_TICK_TIME) return;
+	
+	if (!CharacterOwner || (!CharacterOwner->Controller && !bRunPhysicsWithNoController && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity() && (CharacterOwner->GetLocalRole() != ROLE_SimulatedProxy)))
+	{
+		Acceleration = FVector::ZeroVector;
+		Velocity = FVector::ZeroVector;
+		return;
+	}
+
+	bJustTeleported = false;
+	float remainingTime = deltaTime;
+
+	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && CharacterOwner && (CharacterOwner->Controller || bRunPhysicsWithNoController || (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy)))
+	{
+		Iterations++;
+		bJustTeleported = true;
+		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
+		remainingTime -= timeTick;
+		
+		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
+		const FVector CharacterToGrapplePoint = AttachPoint.ImpactPoint - UpdatedComponent->GetComponentLocation();
+		
+		if ((CharacterToGrapplePoint.GetSafeNormal() | AttachPoint.ImpactNormal) > 0 || CharacterToGrapplePoint.Length() < GrappleReleaseDistance)
+		{
+			SetMovementMode(MOVE_Falling);
+			StartNewPhysics(remainingTime, Iterations);
+			return;
+		}
+		
+		// Perform move
+		Velocity += GetGravityZ() * FVector::DownVector * timeTick;
+		Velocity = CharacterToGrapplePoint.GetSafeNormal() * GetMaxSpeed();
+		
+		const FVector delta = timeTick * Velocity;
+
+		FHitResult Hit(1.f);
+		SafeMoveUpdatedComponent(delta,UpdatedComponent->GetComponentQuat(), true, Hit);
+		if (Hit.Time < 1.f)
+		{
+			HandleImpact(Hit, deltaTime, delta);
+			SlideAlongSurface(delta, (1.f - Hit.Time), Hit.Normal, Hit, true);
+		}
+		if (UpdatedComponent->GetComponentLocation() == OldLocation)
+		{
+			remainingTime = 0.f;
+			break;
+		}
+		Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / timeTick;
+	}
+}
+
+void UDashCharacterMovementComponent::EnterGrapple()
+{
+	Velocity.Z += StartGrappleBoost;
+}
+
+void UDashCharacterMovementComponent::ExitGrapple()
+{
+}
+
 float UDashCharacterMovementComponent::CapR() const
 {
 	return CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius(); 
@@ -703,6 +801,8 @@ float UDashCharacterMovementComponent::GetMaxSpeed() const
 		return MaxSlideSpeed;
 	case CMOVE_WallRun:
 		return MaxWallRunSpeed;
+	case CMOVE_Grapple:
+		return MaxGrappleSpeed;
 	default:
 		UE_LOG(LogTemp, Fatal, TEXT("Invalid Movement Mode"))
 		return -1.f;

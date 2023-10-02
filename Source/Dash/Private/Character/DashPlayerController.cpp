@@ -26,5 +26,5 @@ void ADashPlayerController::AcknowledgePossession(APawn* P)
 	const auto PlayerCharacter = Cast<APlayerCharacter>(P);
 	
 	if (!PlayerCharacter->GetAbilitySystemComponent()) return;
-	PlayerCharacter->GetAbilitySystemComponent()->InitAbilityActorInfo(this,this);
+	PlayerCharacter->GetAbilitySystemComponent()->InitAbilityActorInfo(PlayerCharacter,PlayerCharacter);
 }

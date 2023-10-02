@@ -33,6 +33,7 @@ enum ECustomMovementMode
 	CMOVE_None		UMETA(Hidden),
 	CMOVE_Slide		UMETA(DisplayName = "Slide"),
 	CMOVE_WallRun	UMETA(DisplayName = "Wall Run"),
+	CMOVE_Grapple   UMETA(DisplayName = "Grapple"),
 	CMOVE_MAX		UMETA(Hidden),
 };
 
@@ -112,6 +113,9 @@ public:
 	virtual bool CanAttemptJump() const override;
 	virtual bool DoJump(bool bReplayingMoves) override;
 	
+	UFUNCTION(BlueprintPure)
+	bool IsGrappling() const;
+	
 protected:
 	virtual void InitializeComponent() override;
 	
@@ -123,40 +127,55 @@ protected:
 	
 private:
 	// Sprint
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Sprint)
 	float MaxSprintSpeed=750.f;
 	
 	// Slide
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Slide)
 	float MinSlideSpeed=720.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Slide)
 	float MaxSlideSpeed=400.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Slide)
 	float SlideEnterImpulse=400.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Slide)
 	float SlideGravityForce=4000.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Slide)
 	float SlideFrictionFactor=.06f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Slide)
 	float BrakingDecelerationSliding=1000.f;
 
 	// Wall Run
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = WallRun)
 	float MinWallRunSpeed=200.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = WallRun)
 	float MaxWallRunSpeed=800.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = WallRun)
 	float MaxVerticalWallRunSpeed=200.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = WallRun)
 	float WallRunPullAwayAngle=75;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = WallRun)
 	float WallAttractionForce = 200.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = WallRun)
 	float MinWallRunHeight=50.f;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = WallRun)
 	UCurveFloat* WallRunGravityScaleCurve;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = WallRun)
 	float WallJumpOffForce = 300.f;
+
+	// Grapple
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	float MaxGrappleDistance=1500.f;
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	float StartGrappleBoost=500.f;
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	float MaxGrappleSpeed=1000.f;
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	float GrappleReleaseDistance=300.f;
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	float GrappleVerticalBoost = 300.f;
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	float GrappleHorizontalBoost = 500.f;
+	FHitResult AttachPoint;
 	
 	UPROPERTY(Transient)
 	APlayerCharacter* DashCharacterOwner;
@@ -174,6 +193,14 @@ private:
 	// Wall Run
 	bool TryWallRun();
 	void PhysWallRun(float deltaTime, int32 Iterations);
+
+	// Grapple
+public:
+	bool TryGrapple();
+private:
+	void PhysGrapple(float deltaTime, int32 Iterations);
+	void EnterGrapple();
+	void ExitGrapple();
 
 	FDashCharacterGroundInfo CachedGroundInfo;
 

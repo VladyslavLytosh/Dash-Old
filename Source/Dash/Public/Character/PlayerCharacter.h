@@ -29,6 +29,8 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	
 	FCollisionQueryParams GetIgnoreCharacterParams() const;
+
+	FORCEINLINE UCameraComponent* GetCameraComponent() const { return CameraComponent; };
 	
 	UFUNCTION(BlueprintCallable)
 	void TryApplyAbilitySet(const UDashAbilitySet* AbilitySet, bool bCancelEarlySet = false);
